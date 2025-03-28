@@ -11,6 +11,9 @@ from typing import List, Dict, Any
 
 sys.path.append("src")
 from embedding_models.clip import CLIPEmbeddingModel
+from embedding_models.dim_reduce import apply_umap
+from clustering.k_means import KMeans
+from data_viz.clustering_plot import plot_clusters
 
 def compute_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -> None:
     """
@@ -63,6 +66,20 @@ def compute_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -
 
     return real_image_embed, fake_image_embed
 
+def run_clustering(embeddings: torch.Tensor, k: int = 6, title: str = "K-Means Clustering") -> None:
+    """
+    Run KMeans clustering on the embeddings.
+
+    Args:
+        embeddings (torch.Tensor): The embeddings to cluster.
+        k (int): Number of clusters. Default is 6.
+    """
+    kmeans = KMeans(k=k)
+    centroids, labels, clusters = kmeans.fit(embeddings)
+    
+    # Plot clusters
+    plot_clusters(embeddings.numpy(), clusters, title=title)
+
 if __name__ == "__main__":
     input_dir = "datasets/cifake"
     num_samples = 100
@@ -79,5 +96,17 @@ if __name__ == "__main__":
     print("Fake Image Embeddings Shape:", fake_image_embed.shape)
     print("Real Image Embeddings:", real_image_embed)
     print("Fake Image Embeddings:", fake_image_embed)
+
+    # Apply UMAP for dimensionality reduction
+    reduced_real_embed = apply_umap(real_image_embed.numpy(), n_components=2)
+    reduced_fake_embed = apply_umap(fake_image_embed.numpy(), n_components=2)
+
+    reduced_real_embed = torch.tensor(reduced_real_embed)
+    reduced_fake_embed = torch.tensor(reduced_fake_embed)
+
+    # Run clustering on real and fake image embeddings
+    run_clustering(reduced_real_embed, k=6, title="CIFAKE Real Image Dataset Semantic Clustering")
+    run_clustering(reduced_fake_embed, k=6, title="CIFAKE Synthetic Image Dataset Semantic Clustering")
+    print("Clustering completed.")
 
     

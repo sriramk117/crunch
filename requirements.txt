@@ -5,3 +5,4 @@ tqdm
 pillow
 scikit-learn
 umap-learn
+matplotlib
