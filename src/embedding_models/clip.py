@@ -2,25 +2,39 @@ import torch
 from PIL import Image
 from transformers import CLIPModel, CLIPProcessor
 from typing import List, Dict, Any
+from tqdm import tqdm
 
 class CLIPEmbeddingModel:
     def __init__(self, model_name: str = "openai/clip-vit-base-patch16"):
         self.model = CLIPModel.from_pretrained(model_name)
         self.processor = CLIPProcessor.from_pretrained(model_name)
 
-    def embed_text(self, texts: List[str]) -> torch.Tensor:
-        inputs = self.processor(text=texts, return_tensors="pt", padding=True, truncation=True)
-        with torch.no_grad():
-            outputs = self.model.get_text_features(**inputs)
-        return outputs
+    def embed_text(self, texts: List[str], batch_size: int = 32) -> torch.Tensor:
+        txt_embeddings = []
 
-    def embed_images(self, images: List[Any]) -> torch.Tensor:
-        inputs = self.processor(images=images, return_tensors="pt", padding=True)
-        with torch.no_grad():
-            outputs = self.model.get_image_features(**inputs)
-        return outputs
+        for i in tqdm(range(0, len(texts), batch_size), desc="Embedding texts"):
+            batch = texts[i:i + batch_size]
+            inputs = self.processor(text=batch, return_tensors="pt", padding=True, truncation=True)
+            with torch.no_grad():
+                outputs = self.model.get_text_features(**inputs)
+            txt_embeddings.append(outputs)
+
+        return torch.cat(txt_embeddings, dim=0)
+
+    def embed_images(self, images: List[Any], batch_size: int = 32) -> torch.Tensor:
+        img_embeddings = []
+        
+        for i in tqdm(range(0, len(images), batch_size), desc="Embedding images"):
+            batch = images[i:i + batch_size]
+            inputs = self.processor(images=batch, return_tensors="pt", padding=True)
+            with torch.no_grad():
+                outputs = self.model.get_image_features(**inputs)
+            img_embeddings.append(outputs)
+            
+        return torch.cat(img_embeddings, dim=0)
+
     
-    def embed(self, data: List[Dict[str, Any]]) -> torch.Tensor:
+    def embed(self, data: List[Dict[str, Any]], batch_size: int = 32) -> torch.Tensor:
         """
         Embed a list of dictionaries containing either 'text' or 'image' keys.
 
@@ -33,8 +47,8 @@ class CLIPEmbeddingModel:
         texts = [item['text'] for item in data if 'text' in item]
         images = [item['image'] for item in data if 'image' in item]
 
-        text_embeddings = self.embed_text(texts) if texts else None
-        image_embeddings = self.embed_images(images) if images else None
+        text_embeddings = self.embed_text(texts, batch_size=batch_size) if texts else None
+        image_embeddings = self.embed_images(images, batch_size=batch_size) if images else None
 
         return text_embeddings, image_embeddings
     
