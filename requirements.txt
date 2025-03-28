@@ -3,3 +3,5 @@ numpy
 transformers
 tqdm
 pillow
+scikit-learn
+umap-learn
