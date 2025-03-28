@@ -5,6 +5,8 @@ import torch
 import tqdm
 import time
 import sys
+import argparse
+import json
 
 from PIL import Image
 from typing import List, Dict, Any
@@ -66,7 +68,7 @@ def compute_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -
 
     return real_image_embed, fake_image_embed
 
-def run_clustering(embeddings: torch.Tensor, k: int = 6, title: str = "K-Means Clustering") -> None:
+def run_clustering(embeddings: torch.Tensor, k: int = 6, title: str = "K-Means Clustering", save_path: str = None) -> None:
     """
     Run KMeans clustering on the embeddings.
 
@@ -78,11 +80,25 @@ def run_clustering(embeddings: torch.Tensor, k: int = 6, title: str = "K-Means C
     centroids, labels, clusters = kmeans.fit(embeddings)
     
     # Plot clusters
-    plot_clusters(embeddings.numpy(), clusters, title=title)
+    plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
 
 if __name__ == "__main__":
-    input_dir = "datasets/cifake"
-    num_samples = 100
+    # Set random seed for reproducibility
+    random.seed(42)
+
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Process CIFake dataset and run clustering.")
+    parser.add_argument("--input_dir", type=str, default="datasets/cifake", help="Input directory containing CIFake dataset.")
+    parser.add_argument("--num_samples", type=int, default=100, help="Number of samples to process.")
+    parser.add_argument("--output_dir", type=str, default="plots", help="Output directory to save processed data.")
+    args = parser.parse_args()
+
+    input_dir = args.input_dir
+    num_samples = args.num_samples
+    output_dir = args.output_dir
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     start_time = time.time()
 
@@ -105,8 +121,8 @@ if __name__ == "__main__":
     reduced_fake_embed = torch.tensor(reduced_fake_embed)
 
     # Run clustering on real and fake image embeddings
-    run_clustering(reduced_real_embed, k=6, title="CIFAKE Real Image Dataset Semantic Clustering")
-    run_clustering(reduced_fake_embed, k=6, title="CIFAKE Synthetic Image Dataset Semantic Clustering")
+    run_clustering(reduced_real_embed, k=6, title="CIFAKE Real Image Dataset Semantic Clustering", save_path=os.path.join(output_dir, "real_clusters.png"))
+    run_clustering(reduced_fake_embed, k=6, title="CIFAKE Synthetic Image Dataset Semantic Clustering", save_path=os.path.join(output_dir, "fake_clusters.png"))
     print("Clustering completed.")
 
     
