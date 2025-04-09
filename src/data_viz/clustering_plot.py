@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib as mpl
 from typing import Dict
+import hdbscan 
 plt.style.use('ggplot')
 
 sys.path.append("src")
@@ -50,10 +51,20 @@ def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "Clust
 if __name__ == "__main__":
     # Example usage
     embeddings = torch.randn(100, 2)  # Replace with actual 2D embeddings
-    kmeans = KMeans(k=6, tol=0)
-    centroids, labels, clusters = kmeans.fit(embeddings)
 
-    print(clusters)
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=5)
+    cluster_labels = clusterer.fit_predict(embeddings)
+    clusters = {}
+    for i, label in enumerate(cluster_labels):
+        if label not in clusters:
+            clusters[label] = []
+        clusters[label].append(embeddings[i].numpy())
+    print("Cluster labels by HDBSCAN:", cluster_labels)
+    print("Clusters:", clusters)
+
+    # Example usage with KMeans
+    #kmeans = KMeans(k=6, tol=0)
+    #centroids, labels, clusters = kmeans.fit(embeddings)
 
     plot_clusters(embeddings, clusters, title="KMeans Clustering")
 
