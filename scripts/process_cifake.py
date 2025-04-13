@@ -17,7 +17,7 @@ sys.path.append("src")
 from embedding_models.clip import CLIPEmbeddingModel
 from embedding_models.dim_reduce import apply_umap
 from clustering.k_means import KMeans
-from data_viz.clustering_plot import plot_clusters
+from plots.clustering_plot import plot_clusters
 
 def compute_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -> None:
     """

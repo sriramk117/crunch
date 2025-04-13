@@ -1,6 +1,9 @@
 # Datasets (too big to be in the repo)
 /datasets
 
+# Embedded Repositories
+/models
+
 # Metadata
 .DS_Store
 *.DS_Store

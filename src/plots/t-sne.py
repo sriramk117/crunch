@@ -11,7 +11,7 @@ plt.style.use('ggplot')
 sys.path.append("src")
 from clustering.k_means import KMeans
 
-def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "Clustering Plot", save_path: str = None) -> None:
+def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "t-SNE", save_path: str = None) -> None:
     """
     Plot clusters in a 2D space using the provided embeddings and labels.
 
