@@ -17,7 +17,7 @@ sys.path.append("src")
 from embedding_models.clip import CLIPEmbeddingModel
 from embedding_models.dim_reduce import apply_umap
 from clustering.k_means import KMeans
-from plots.clustering_plot import plot_clusters
+from plots.semantic_clustering import plot_clusters
 
 def compute_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -> None:
     """
@@ -70,7 +70,7 @@ def compute_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -
 
     return real_image_embed, fake_image_embed
 
-def run_k_means_clustering(embeddings: torch.Tensor, k: int = 6, title: str = "K-Means Clustering", save_path: str = None) -> None:
+def run_k_means_clustering(embeddings: torch.Tensor, k: int = 6, title: str = "Semantic Clustering with K-Means", save_path: str = None) -> None:
     """
     Run KMeans clustering on the embeddings.
 
@@ -84,9 +84,9 @@ def run_k_means_clustering(embeddings: torch.Tensor, k: int = 6, title: str = "K
     centroids, labels, clusters = kmeans.fit(embeddings)
     
     # Plot clusters
-    plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
+    plot_clusters(embeddings.numpy(), clusters, title=title)
 
-def run_hdbscan_clustering(embeddings: torch.Tensor, min_cluster_size: int = 20, title: str = "HDBSCAN Clustering", save_path: str = None) -> None:
+def run_hdbscan_clustering(embeddings: torch.Tensor, min_cluster_size: int = 20, title: str = "Semantic Clustering with HDBSCAN", save_path: str = None) -> None:
     """
     Run HDBSCAN clustering on the embeddings.
 
@@ -108,7 +108,7 @@ def run_hdbscan_clustering(embeddings: torch.Tensor, min_cluster_size: int = 20,
         clusters[label].append(embeddings[i].numpy())
 
     # Plot clusters
-    plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
+    plot_clusters(embeddings.numpy(), clusters, title=title)
 
 if __name__ == "__main__":
     # Set random seed for reproducibility
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Process CIFake dataset and run clustering.")
     parser.add_argument("--input_dir", type=str, default="datasets/cifake", help="Input directory containing CIFake dataset.")
-    parser.add_argument("--num_samples", type=int, default=100, help="Number of samples to process.")
+    parser.add_argument("--num_samples", type=int, default=1000, help="Number of samples to process.")
     parser.add_argument("--output_dir", type=str, default="plots", help="Output directory to save processed data.")
     args = parser.parse_args()
 
@@ -149,13 +149,13 @@ if __name__ == "__main__":
     reduced_fake_embed = torch.tensor(reduced_fake_embed)
 
     # Run k-means clustering on real and fake image embeddings
-    run_k_means_clustering(reduced_real_embed, k=6, title="CIFAKE Real Image Dataset Semantic Clustering", save_path=os.path.join(output_dir, "real_kmeans_clusters.png"))
-    run_k_means_clustering(reduced_fake_embed, k=6, title="CIFAKE Synthetic Image Dataset Semantic Clustering", save_path=os.path.join(output_dir, "fake_kmeans_clusters.png"))
-    print("K-Means clustering completed.")
+    # run_k_means_clustering(reduced_real_embed, k=6, title="CIFAKE Real Image Dataset Semantic Clustering")
+    # run_k_means_clustering(reduced_fake_embed, k=6, title="CIFAKE Synthetic Image Dataset Semantic Clustering")
+    # print("K-Means clustering completed.")
 
     # Run HDBSCAN clustering
-    run_hdbscan_clustering(reduced_real_embed, min_cluster_size=20, title="CIFAKE Real Image Dataset Semantic Clustering", save_path=os.path.join(output_dir, "real_hdbscan_clusters.png"))
-    run_hdbscan_clustering(reduced_fake_embed, min_cluster_size=20, title="CIFAKE Synthetic Image Dataset Semantic Clustering", save_path=os.path.join(output_dir, "fake_hdbscan_clusters.png"))
+    run_hdbscan_clustering(reduced_real_embed, min_cluster_size=20, title="CIFAKE Real Image Dataset Semantic Clustering")
+    run_hdbscan_clustering(reduced_fake_embed, min_cluster_size=20, title="CIFAKE Synthetic Image Dataset Semantic Clustering")
     print("Clustering completed.")
 
     

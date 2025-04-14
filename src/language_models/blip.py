@@ -5,12 +5,10 @@ import os
 import sys
 from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../models/BLIP'))
-from models.blip import blip_decoder
+from transformers import AutoModel, AutoTokenizer
 from typing import Dict, Any, List, Tuple
 
-class BLIPModel:
+class ImageCaptioningModel:
     def __init__(self, model_path: str, device: str = 'cpu', image_size: int = 384):
         """
         Initialize the BLIP model.
@@ -22,29 +20,25 @@ class BLIPModel:
         """
         self.device = device
         self.image_size = image_size
-        self.model = self.load_blip_model(model_path)
+        self.model, self.tokenizer = self.load_model(model_path)
 
-    def load_blip_model(self, model_path: str) -> Any:
+    def load_model(self, model_path: str) -> Any:
         """
-        Load the BLIP model.
+        Load the image captioning model.
 
         Args:
-            model_path (str): Path to the BLIP model weights.
+            model_path (str): Path to the image captioning model weights.
             device (str): Device to load the model on ('cpu' or 'cuda').
             image_size (int): Size of the input images. Assumed to be square.
 
         Returns:
-            Any: Loaded BLIP model.
+            Any: Loaded image captioning model.
         """
-        blip_model = blip_decoder(
-            pretrained=model_path,
-            image_size=self.image_size,
-            vit='base',
-            num_query_token=100
-        ).to(self.device)
-        
-        blip_model.eval()
-        return blip_model
+        model = AutoModel.from_pretrained(model_path, trust_remote_code=True, torch_dtype=torch.float16)
+        model = model.to(device='cpu', dtype=torch.float16)
+        tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+        model.eval()
+        return model, tokenizer
     
     def load_image(self, image: torch.Tensor) -> torch.Tensor:
         """
@@ -65,26 +59,36 @@ class BLIPModel:
 
         return transform(image).unsqueeze(0).to(self.device)
     
-    def generate_caption(self, image: torch.Tensor) -> str:
+    def generate_caption(self, image, temperature: float = 0.7) -> str:
         """
         Generate a caption for the given image.
 
         Args:
-            image (torch.Tensor): Preprocessed image tensor.
+            image: Preprocessed image.
+            temperature (float): Sampling temperature for generation.
 
         Returns:
             str: Generated caption.
         """
-        with torch.no_grad():
-            caption = self.model.generate(image, sample=False, num_beams=3, max_length=16, min_length=5)
-        
-        return caption[0]
+        question = 'What is in the image?'
+        conversation = [{'role': 'user', 'content': question}]
+
+        caption, context, _ = self.model.chat(
+            image=image,
+            msgs=conversation,
+            context=None,
+            tokenizer=self.tokenizer,
+            sampling=True,
+            temperature=temperature,
+        )
+    
+        return caption
     
 if __name__ == "__main__":
     # Example usage
-    model_path = "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base.pth"
+    model_path = "openbmb/MiniCPM-V"
     image_path = "datasets/cifake/test/REAL/0040.jpg"
-    model = BLIPModel(model_path=model_path)
-    image = model.load_image(image_path)
+    model = ImageCaptioningModel(model_path=model_path)
+    image = Image.open(image_path).convert("RGB")
     caption = model.generate_caption(image)
     print(caption)

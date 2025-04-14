@@ -1,6 +1,5 @@
 torch
 numpy
-transformers
 tqdm
 pillow
 scikit-learn
@@ -9,3 +8,6 @@ matplotlib
 hdbscan
 altair
 pandas
+transformers
+timm
+sentencepiece

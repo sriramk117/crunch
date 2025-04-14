@@ -51,7 +51,7 @@ def plot_clusters_matplt(embeddings: np.ndarray, labels_dict: Dict, title: str =
         plt.show()
     plt.close()
 
-def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "t-SNE", save_path: str = None) -> None:
+def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "Semantic Clustering", save_path: str = None) -> None:
     # Prepare data for Altair
     data = []
     for label, points in labels_dict.items():
@@ -67,8 +67,8 @@ def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "t-SNE
         tooltip=['x', 'y', 'cluster']
     ).properties(
         title=title,
-        width=600,
-        height=400
+        width=800,
+        height=800
     )
     chart = chart.interactive()  # Enable zooming and panning
 
@@ -79,24 +79,31 @@ def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "t-SNE
 
 if __name__ == "__main__":
     # Example usage
-    embeddings = torch.randn(100, 2)  # Replace with actual 2D embeddings
-
-    clusterer = hdbscan.HDBSCAN(min_cluster_size=5)
-    cluster_labels = clusterer.fit_predict(embeddings)
+    embeddings = torch.randn(400, 2)  # Replace with actual 2D embeddings
+    print(embeddings.shape)
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=50)
+    clusterer.fit(embeddings)
+    labels = clusterer.labels_
     clusters = {}
-    for i, label in enumerate(cluster_labels):
-        if label not in clusters:
-            clusters[label] = []
-        clusters[label].append(embeddings[i].numpy())
-    print("Cluster labels by HDBSCAN:", cluster_labels)
-    print("Clusters:", clusters)
+    for i in range(len(labels)):
+        if labels[i] not in clusters:
+            clusters[labels[i]] = []
+        clusters[labels[i]].append(embeddings[i].numpy())
+    # clusters = {}
+    # for i, label in enumerate(cluster_labels):
+    #     if label not in clusters:
+    #         clusters[label] = []
+    #     clusters[label].append(embeddings[i].numpy())
+    #print("Cluster labels by HDBSCAN:", cluster_labels)
+    #print("Clusters:", clusters)
 
     # Example usage with KMeans
-    kmeans = KMeans(k=6, tol=0)
-    centroids, labels, clusters = kmeans.fit(embeddings)
-    print("Cluster labels by KMeans:", clusters)
+    # kmeans = KMeans(k=20, tol=0)
+    # centroids, labels, clusters = kmeans.fit(embeddings)
+    # print("Cluster labels by KMeans:", clusters)
 
-    plot_clusters(embeddings, clusters, title="KMeans Clustering")
+    #plot_clusters(embeddings, clusters, title="KMeans Clustering")
 
+    plot_clusters(embeddings, clusters, title="HDBSCAN Clustering")
     #plot_clusters_matplt(embeddings, clusters, title="KMeans Clustering")
 
