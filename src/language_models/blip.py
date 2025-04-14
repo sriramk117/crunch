@@ -2,8 +2,11 @@ from PIL import Image
 import requests
 import torch
 import os
+import sys
 from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../models/BLIP'))
 from models.blip import blip_decoder
 from typing import Dict, Any, List, Tuple
 

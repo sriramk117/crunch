@@ -6,18 +6,21 @@ from matplotlib import cm
 import matplotlib as mpl
 from typing import Dict
 import hdbscan 
+import altair as alt
+alt.renderers.enable("browser") # Enable offline rendering for Altair
 plt.style.use('ggplot')
 
 sys.path.append("src")
 from clustering.k_means import KMeans
+import pandas as pd
 
-def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "t-SNE", save_path: str = None) -> None:
+def plot_clusters_matplt(embeddings: np.ndarray, labels_dict: Dict, title: str = "t-SNE", save_path: str = None) -> None:
     """
     Plot clusters in a 2D space using the provided embeddings and labels.
 
     Args:
         embeddings (np.ndarray): The 2D embeddings to plot.
-        labels (np.ndarray): The cluster labels for each embedding.
+        labels_dict (Dict): The cluster labels for each embedding.
         title (str): Title of the plot.
         save_path (str): Path to save the plot. If None, the plot will be shown instead.
 
@@ -48,6 +51,32 @@ def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "t-SNE
         plt.show()
     plt.close()
 
+def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "t-SNE", save_path: str = None) -> None:
+    # Prepare data for Altair
+    data = []
+    for label, points in labels_dict.items():
+        for point in points:
+            data.append({"x": point[0], "y": point[1], "cluster": label})
+    df = pd.DataFrame(data)
+    
+    # Create Altair plot
+    chart = alt.Chart(df).mark_circle(size=60).encode(
+        x='x:Q',
+        y='y:Q',
+        color='cluster:N',
+        tooltip=['x', 'y', 'cluster']
+    ).properties(
+        title=title,
+        width=600,
+        height=400
+    )
+    chart = chart.interactive()  # Enable zooming and panning
+
+    chart.show()
+    if save_path:
+        chart.save(save_path)
+        print(f"Plot saved to {save_path}")
+
 if __name__ == "__main__":
     # Example usage
     embeddings = torch.randn(100, 2)  # Replace with actual 2D embeddings
@@ -63,8 +92,11 @@ if __name__ == "__main__":
     print("Clusters:", clusters)
 
     # Example usage with KMeans
-    #kmeans = KMeans(k=6, tol=0)
-    #centroids, labels, clusters = kmeans.fit(embeddings)
+    kmeans = KMeans(k=6, tol=0)
+    centroids, labels, clusters = kmeans.fit(embeddings)
+    print("Cluster labels by KMeans:", clusters)
 
     plot_clusters(embeddings, clusters, title="KMeans Clustering")
+
+    #plot_clusters_matplt(embeddings, clusters, title="KMeans Clustering")
 
