@@ -79,7 +79,7 @@ def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "Seman
 
 if __name__ == "__main__":
     # Example usage
-    embeddings = torch.randn(400, 2)  # Replace with actual 2D embeddings
+    embeddings = torch.randn(1500, 2)  # Replace with actual 2D embeddings
     print(embeddings.shape)
     clusterer = hdbscan.HDBSCAN(min_cluster_size=50)
     clusterer.fit(embeddings)
@@ -98,12 +98,12 @@ if __name__ == "__main__":
     #print("Clusters:", clusters)
 
     # Example usage with KMeans
-    # kmeans = KMeans(k=20, tol=0)
-    # centroids, labels, clusters = kmeans.fit(embeddings)
-    # print("Cluster labels by KMeans:", clusters)
+    kmeans = KMeans(k=20, tol=0)
+    centroids, labels, clusters = kmeans.fit(embeddings)
+    print("Cluster labels by KMeans:", clusters)
 
-    #plot_clusters(embeddings, clusters, title="KMeans Clustering")
+    plot_clusters(embeddings, clusters, title="KMeans Clustering")
 
-    plot_clusters(embeddings, clusters, title="HDBSCAN Clustering")
+    #plot_clusters(embeddings, clusters, title="HDBSCAN Clustering")
     #plot_clusters_matplt(embeddings, clusters, title="KMeans Clustering")
 

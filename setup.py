@@ -1,0 +1,35 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="crunch",
+    version="0.1.0",
+    author="Sriram K.",
+    author_email="sriram@example.com",
+    description="A Python package for clustering and visualizing large image datasets.",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/sriramkutty/crunch",
+    license="MIT",
+    packages=find_packages(),
+    install_requires=[
+        "torch",
+        "numpy",
+        "tqdm",
+        "pillow",
+        "scikit-learn",
+        "umap-learn",
+        "matplotlib",
+        "hdbscan",
+        "altair",
+        "pandas",
+        "transformers",
+        "timm",
+        "sentencepiece",
+    ],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    python_requires=">=3.7",
+)

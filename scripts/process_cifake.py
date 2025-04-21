@@ -157,5 +157,3 @@ if __name__ == "__main__":
     run_hdbscan_clustering(reduced_real_embed, min_cluster_size=20, title="CIFAKE Real Image Dataset Semantic Clustering")
     run_hdbscan_clustering(reduced_fake_embed, min_cluster_size=20, title="CIFAKE Synthetic Image Dataset Semantic Clustering")
     print("Clustering completed.")
-
-    
