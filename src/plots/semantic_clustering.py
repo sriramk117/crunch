@@ -51,15 +51,23 @@ def plot_clusters_matplt(embeddings: np.ndarray, labels_dict: Dict, title: str =
         plt.show()
     plt.close()
 
-def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "Semantic Clustering", save_path: str = None) -> None:
-    # Prepare data for Altair
+
+def plot_clusters(embeddings, labels_dict, title="Semantic Clustering", save_path=None):
+    """
+    Plot clusters in a 2D space using Altair.
+
+    Args:
+        embeddings (np.ndarray): The 2D embeddings to plot.
+        labels_dict (Dict): The cluster labels for each embedding.
+        title (str): Title of the plot.
+        save_path (str): Path to save the plot. If None, the plot will be shown instead.
+    """
     data = []
     for label, points in labels_dict.items():
         for point in points:
             data.append({"x": point[0], "y": point[1], "cluster": label})
     df = pd.DataFrame(data)
-    
-    # Create Altair plot
+
     chart = alt.Chart(df).mark_circle(size=60).encode(
         x='x:Q',
         y='y:Q',
@@ -69,13 +77,41 @@ def plot_clusters(embeddings: np.ndarray, labels_dict: Dict, title: str = "Seman
         title=title,
         width=800,
         height=800
-    )
-    chart = chart.interactive()  # Enable zooming and panning
+    ).interactive()
 
     chart.show()
     if save_path:
         chart.save(save_path)
         print(f"Plot saved to {save_path}")
+
+
+def cluster_and_plot(embeddings, method="kmeans", k=6, min_cluster_size=20, title="Clustering", save_path=None):
+    """
+    Perform clustering and plot the results.
+
+    Args:
+        embeddings (torch.Tensor): The embeddings to cluster.
+        method (str): Clustering method ('kmeans' or 'hdbscan').
+        k (int): Number of clusters for K-Means.
+        min_cluster_size (int): Minimum cluster size for HDBSCAN.
+        title (str): Title of the plot.
+        save_path (str): Path to save the plot.
+    """
+    if method == "kmeans":
+        kmeans = KMeans(k=k)
+        centroids, labels, clusters = kmeans.fit(embeddings)
+    elif method == "hdbscan":
+        clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size)
+        cluster_labels = clusterer.fit_predict(embeddings.numpy())
+        clusters = {}
+        for i, label in enumerate(cluster_labels):
+            if label not in clusters:
+                clusters[label] = []
+            clusters[label].append(embeddings[i].numpy())
+    else:
+        raise ValueError("Invalid clustering method. Choose 'kmeans' or 'hdbscan'.")
+
+    plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
 
 if __name__ == "__main__":
     # Example usage
