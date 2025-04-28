@@ -17,6 +17,7 @@ sys.path.append("src")
 from embedding_models.clip import CLIPEmbeddingModel
 from embedding_models.dim_reduce import apply_umap
 from clustering.k_means import KMeans
+from language_models.clustering_agent import ClusteringAgent
 import pandas as pd
 
 def compute_clip_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -> None:
@@ -146,16 +147,16 @@ def cluster_and_plot(embeddings, method="kmeans", k=6, min_cluster_size=20, titl
         centroids, labels, clusters = kmeans.fit(embeddings)
     elif method == "hdbscan":
         clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size)
-        cluster_labels = clusterer.fit_predict(embeddings.numpy())
+        cluster_labels = clusterer.fit_predict(embeddings.np())
         clusters = {}
         for i, label in enumerate(cluster_labels):
             if label not in clusters:
                 clusters[label] = []
-            clusters[label].append(embeddings[i].numpy())
+            clusters[label].append(embeddings[i].np())
     else:
         raise ValueError("Invalid clustering algorithm. Choose between following methods: 'kmeans' or 'hdbscan'.")
 
-    plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
+    plot_clusters(embeddings.np(), clusters, title=title, save_path=save_path)
 
 def cluster_kmeans(
         directory_path, 
@@ -164,6 +165,7 @@ def cluster_kmeans(
         embedding_method="CLIP", 
         k=6, 
         title="KMeans Clustering", 
+        api_key=None,
         save_path=None):
     """
     Perform KMeans clustering and plot the results.
@@ -171,6 +173,8 @@ def cluster_kmeans(
     Args:
         embeddings (torch.Tensor): The embeddings to cluster.
         embedding_method (str): The embedding method used.
+        num_samples (int): Number of samples to process.
+        batch_size (int): Number of images to process in a batch.
         k (int): Number of clusters.
         title (str): Title of the plot.
         save_path (str): Path to save the plot.
@@ -185,6 +189,11 @@ def cluster_kmeans(
     if embeddings is None or len(embeddings) == 0:
         raise ValueError("No embeddings were generated. Please check the input directory and embedding method.")
     
+    # Apply dimensionality reduction
+    print(embeddings)
+    print(embeddings.shape)
+    embeddings = apply_umap(embeddings, n_components=2)
+    
     if k is None:
         raise ValueError("k must be specified for KMeans clustering.")
     elif k <= 0:
@@ -195,15 +204,25 @@ def cluster_kmeans(
     kmeans = KMeans(k=k)
     centroids, labels, clusters = kmeans.fit(embeddings)
 
+    # Check if user wants clusters to be semantically labeled
+    # TODO: We assume that the user wants semantic labeling if an API key is provided. This 
+    # can be improved by adding some setting or shifting from this Python library based infrastructure
+    # to a more user-friendly interface.
+    if api_key:
+        clustering_agent = ClusteringAgent(model="gpt-3.5-turbo", clusters=clusters, api_key=api_key)
+        clusters, labels = clustering_agent.label_clusters()
+        print(f"Clusters labeled by OpenAI API. Here are the labels: {labels}")
+
     plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
 
 def cluster_hdbscan(
-        embeddings, 
+        directory_path, 
         embedding_method="CLIP", 
         num_samples=1000,
         batch_size=32,
         min_cluster_size=20, 
         title="HDBSCAN Clustering", 
+        api_key=None,
         save_path=None):
     """
     Perform HDBSCAN clustering and plot the results.
@@ -211,12 +230,15 @@ def cluster_hdbscan(
     Args:
         embeddings (torch.Tensor): The embeddings to cluster.
         embedding_method (str): The embedding method used.
+        num_samples (int): Number of samples to process.
+        batch_size (int): Number of images to process in a batch.
         min_cluster_size (int): Minimum cluster size for HDBSCAN.
         title (str): Title of the plot.
+        api_key (str): OpenAI API key for semantic labeling.
         save_path (str): Path to save the plot.
     """
     embeddings = None
-    directory_path = None
+    image_paths = None
     if embedding_method == "CLIP":
         embeddings, image_paths = compute_clip_emb(directory_path, num_samples=num_samples, batch_size=batch_size)
     else:
@@ -225,15 +247,30 @@ def cluster_hdbscan(
     if embeddings is None or len(embeddings) == 0:
         raise ValueError("No embeddings were generated. Please check the input directory and embedding method.")
     
+    # Apply dimensionality reduction
+    embeddings = apply_umap(embeddings, n_components=2)
+
+    print(embeddings)
+    print(embeddings.shape)
+
     clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size)
-    cluster_labels = clusterer.fit_predict(embeddings.numpy())
+    cluster_labels = clusterer.fit_predict(embeddings)
     clusters = {}
     for i, label in enumerate(cluster_labels):
         if label not in clusters:
             clusters[label] = []
-        clusters[label].append(embeddings[i].numpy())
+        clusters[label].append(embeddings[i]) 
 
-    plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
+    # Check if user wants clusters to be semantically labeled
+    # TODO: We assume that the user wants semantic labeling if an API key is provided. This 
+    # can be improved by adding some setting or shifting from this Python library based infrastructure
+    # to a more user-friendly interface.
+    if api_key:
+        clustering_agent = ClusteringAgent(model="gpt-3.5-turbo", clusters=clusters, api_key=api_key)
+        clusters, labels = clustering_agent.label_clusters()
+        print(f"Clusters labeled by OpenAI API. Here are the labels: {labels}")
+
+    plot_clusters(embeddings, clusters, title=title, save_path=save_path)
 
 if __name__ == "__main__":
     # Example usage
@@ -246,12 +283,12 @@ if __name__ == "__main__":
     for i in range(len(labels)):
         if labels[i] not in clusters:
             clusters[labels[i]] = []
-        clusters[labels[i]].append(embeddings[i].numpy())
+        clusters[labels[i]].append(embeddings[i].np())
     # clusters = {}
     # for i, label in enumerate(cluster_labels):
     #     if label not in clusters:
     #         clusters[label] = []
-    #     clusters[label].append(embeddings[i].numpy())
+    #     clusters[label].append(embeddings[i].np())
     #print("Cluster labels by HDBSCAN:", cluster_labels)
     #print("Clusters:", clusters)
 
@@ -260,7 +297,7 @@ if __name__ == "__main__":
     centroids, labels, clusters = kmeans.fit(embeddings)
     print("Cluster labels by KMeans:", clusters)
 
-    plot_clusters(embeddings, clusters, title="KMeans Clustering")
+    plot_clusters(embeddings.np(), clusters, title="KMeans Clustering")
 
     #plot_clusters(embeddings, clusters, title="HDBSCAN Clustering")
     #plot_clusters_matplt(embeddings, clusters, title="KMeans Clustering")

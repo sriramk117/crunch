@@ -17,7 +17,7 @@ sys.path.append("src")
 from embedding_models.clip import CLIPEmbeddingModel
 from embedding_models.dim_reduce import apply_umap
 from clustering.k_means import KMeans
-from plots.semantic_clustering import plot_clusters
+from plots.semantic_clustering import plot_clusters, cluster_hdbscan, cluster_kmeans
 
 def compute_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -> None:
     """
@@ -116,44 +116,32 @@ if __name__ == "__main__":
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Process CIFake dataset and run clustering.")
-    parser.add_argument("--input_dir", type=str, default="datasets/cifake", help="Input directory containing CIFake dataset.")
+    parser.add_argument("--input_dir", type=str, default="datasets/cifake/test/REAL", help="Input directory containing CIFake dataset.")
     parser.add_argument("--num_samples", type=int, default=1000, help="Number of samples to process.")
     parser.add_argument("--output_dir", type=str, default="plots", help="Output directory to save processed data.")
+    parser.add_argument("--method", type=str, choices=["kmeans", "hdbscan"], default="hdbscan", help="Clustering method to use.")
     args = parser.parse_args()
 
     input_dir = args.input_dir
     num_samples = args.num_samples
     output_dir = args.output_dir
+    method = args.method
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     start_time = time.time()
 
-    real_image_embed, fake_image_embed = compute_emb(input_dir, num_samples)
+    cluster_hdbscan(
+        directory_path=input_dir,
+        embedding_method="CLIP",
+        num_samples=num_samples,
+        batch_size=32,
+        min_cluster_size=20,
+        title="Clustering CIFAKE Real with HDBSCAN",
+    )
 
-    # Elapsed time
     elapsed_time = time.time() - start_time
-    print(f"Processing completed in {elapsed_time:.2f} seconds.")
+    print(f"Elapsed time: {elapsed_time:.2f} seconds")
 
-    print("Real Image Embeddings Shape:", real_image_embed.shape)
-    print("Fake Image Embeddings Shape:", fake_image_embed.shape)
-    print("Real Image Embeddings:", real_image_embed)
-    print("Fake Image Embeddings:", fake_image_embed)
-
-    # Apply UMAP for dimensionality reduction
-    reduced_real_embed = apply_umap(real_image_embed.numpy(), n_components=2)
-    reduced_fake_embed = apply_umap(fake_image_embed.numpy(), n_components=2)
-
-    reduced_real_embed = torch.tensor(reduced_real_embed)
-    reduced_fake_embed = torch.tensor(reduced_fake_embed)
-
-    # Run k-means clustering on real and fake image embeddings
-    # run_k_means_clustering(reduced_real_embed, k=6, title="CIFAKE Real Image Dataset Semantic Clustering")
-    # run_k_means_clustering(reduced_fake_embed, k=6, title="CIFAKE Synthetic Image Dataset Semantic Clustering")
-    # print("K-Means clustering completed.")
-
-    # Run HDBSCAN clustering
-    run_hdbscan_clustering(reduced_real_embed, min_cluster_size=20, title="CIFAKE Real Image Dataset Semantic Clustering")
-    run_hdbscan_clustering(reduced_fake_embed, min_cluster_size=20, title="CIFAKE Synthetic Image Dataset Semantic Clustering")
     print("Clustering completed.")

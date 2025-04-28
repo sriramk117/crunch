@@ -7,15 +7,20 @@ import random
 from tqdm import tqdm
 
 class ClusteringAgent:
-    def __init__(self, model: str = "gpt-3.5-turbo", api_key: str = None):
+    """
+    A class to handle clustering and labeling of image embeddings using OpenAI's family of GPT vision models.
+    This class is designed to work with the OpenAI API to generate labels for clusters of images based on their embeddings.
+    """
+    def __init__(self, model: str = "gpt-3.5-turbo", clusters: Dict = None, api_key: str = None):
         """
         Initialize the ClusteringAgent with the specified OpenAI model.
         
         Args:
             model (str): The OpenAI model to use for clustering.
+            clusters (Dict): Dictionary that holds clustered embeddings.
         """
         self.model = model
-        self.clusters = {}
+        self.clusters = clusters if clusters is not None else {}
         self.api_key = api_key
         if not self.api_key:
             raise ValueError("OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.")
@@ -57,6 +62,7 @@ class ClusteringAgent:
         """
         
         labeled_clusters = {}
+        new_keys = []
         
         for cluster_id, embeddings in self.clusters.items():
 
@@ -76,6 +82,7 @@ class ClusteringAgent:
                 }],
             )
             label = response.choices[0].message['content'].strip()  # Added strip() to clean up the response
-            labeled_clusters[cluster_id] = label
+            labeled_clusters[label] = embeddings
+            new_keys.append(label)
         
-        return labeled_clusters
+        return labeled_clusters, new_keys
