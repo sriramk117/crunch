@@ -25,6 +25,7 @@ setup(
         "transformers",
         "timm",
         "sentencepiece",
+        "openai",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

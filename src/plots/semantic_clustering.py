@@ -98,6 +98,13 @@ def cluster_and_plot(embeddings, method="kmeans", k=6, min_cluster_size=20, titl
         save_path (str): Path to save the plot.
     """
     if method == "kmeans":
+        if k is None:
+            raise ValueError("k must be specified for KMeans clustering.")
+        elif k <= 0:
+            raise ValueError("k must be a positive integer for KMeans clustering.")
+        elif k > len(embeddings):
+            raise ValueError("k must be less than or equal to the number of embeddings for KMeans clustering.")
+        
         kmeans = KMeans(k=k)
         centroids, labels, clusters = kmeans.fit(embeddings)
     elif method == "hdbscan":
@@ -109,7 +116,7 @@ def cluster_and_plot(embeddings, method="kmeans", k=6, min_cluster_size=20, titl
                 clusters[label] = []
             clusters[label].append(embeddings[i].numpy())
     else:
-        raise ValueError("Invalid clustering method. Choose 'kmeans' or 'hdbscan'.")
+        raise ValueError("Invalid clustering algorithm. Choose between following methods: 'kmeans' or 'hdbscan'.")
 
     plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
 
