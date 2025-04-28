@@ -17,7 +17,7 @@ sys.path.append("src")
 from embedding_models.clip import CLIPEmbeddingModel
 from embedding_models.dim_reduce import apply_umap
 from clustering.k_means import KMeans
-from language_models.clustering_agent import ClusteringAgent
+from language_models.labeling_agent import LabelingAgent
 import pandas as pd
 
 def compute_clip_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -> None:
@@ -43,14 +43,16 @@ def compute_clip_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 
 
     # Load and compute embeddings for each of the images
     images = []
+    sample_paths = []
     for img_path in image_paths:
         img_path = os.path.join(input_dir, img_path)
         img = Image.open(img_path)
         images.append(img)
+        sample_paths.append(img_path)
     images = images[:num_samples]  # Limit to num_samples
     image_embeddings = clip_model.embed_images(images, batch_size=batch_size)
 
-    return image_embeddings, image_paths
+    return image_embeddings, sample_paths
 
 def plot_clusters_matplt(embeddings: np.ndarray, labels_dict: Dict, title: str = "t-SNE", save_path: str = None) -> None:
     """
@@ -209,8 +211,8 @@ def cluster_kmeans(
     # can be improved by adding some setting or shifting from this Python library based infrastructure
     # to a more user-friendly interface.
     if api_key:
-        clustering_agent = ClusteringAgent(model="gpt-3.5-turbo", clusters=clusters, api_key=api_key)
-        clusters, labels = clustering_agent.label_clusters()
+        labeling_agent = LabelingAgent(model="gpt-4o-mini", clusters=clusters, api_key=api_key)
+        clusters, labels = labeling_agent.label_clusters()
         print(f"Clusters labeled by OpenAI API. Here are the labels: {labels}")
 
     plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
@@ -250,8 +252,12 @@ def cluster_hdbscan(
     # Apply dimensionality reduction
     embeddings = apply_umap(embeddings, n_components=2)
 
-    print(embeddings)
-    print(embeddings.shape)
+    # Create a dictionary mapping embeddings to their corresponding image paths
+    image_paths_dict = {}
+    for embedding, image_path in zip(embeddings, image_paths):
+        print(embedding)
+        print(image_path)
+        image_paths_dict[tuple(embedding)] = image_path
 
     clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size)
     cluster_labels = clusterer.fit_predict(embeddings)
@@ -266,8 +272,8 @@ def cluster_hdbscan(
     # can be improved by adding some setting or shifting from this Python library based infrastructure
     # to a more user-friendly interface.
     if api_key:
-        clustering_agent = ClusteringAgent(model="gpt-3.5-turbo", clusters=clusters, api_key=api_key)
-        clusters, labels = clustering_agent.label_clusters()
+        labeling_agent = LabelingAgent(model="gpt-4o-mini", clusters=clusters, image_paths_dict=image_paths_dict, api_key=api_key)
+        clusters, labels = labeling_agent.label_clusters()
         print(f"Clusters labeled by OpenAI API. Here are the labels: {labels}")
 
     plot_clusters(embeddings, clusters, title=title, save_path=save_path)

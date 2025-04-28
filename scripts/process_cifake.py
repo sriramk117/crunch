@@ -12,6 +12,7 @@ import hdbscan
 from PIL import Image
 from typing import List, Dict, Any
 from tqdm import tqdm
+from dotenv import load_dotenv
 
 sys.path.append("src")
 from embedding_models.clip import CLIPEmbeddingModel
@@ -117,15 +118,28 @@ if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Process CIFake dataset and run clustering.")
     parser.add_argument("--input_dir", type=str, default="datasets/cifake/test/REAL", help="Input directory containing CIFake dataset.")
-    parser.add_argument("--num_samples", type=int, default=1000, help="Number of samples to process.")
+    parser.add_argument("--num_samples", type=int, default=100, help="Number of samples to process.")
     parser.add_argument("--output_dir", type=str, default="plots", help="Output directory to save processed data.")
     parser.add_argument("--method", type=str, choices=["kmeans", "hdbscan"], default="hdbscan", help="Clustering method to use.")
     args = parser.parse_args()
 
+    # Set parameters
     input_dir = args.input_dir
     num_samples = args.num_samples
     output_dir = args.output_dir
     method = args.method
+
+    # Load environment variables
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+    print(dotenv_path)
+    if os.path.exists(dotenv_path):
+        load_dotenv(dotenv_path)
+    else:
+        print(f"Warning: .env file not found at {dotenv_path}. Using system environment variables.")
+
+    OPEN_AI_KEY = os.getenv("OPEN_AI_KEY")
+    if not OPEN_AI_KEY:
+        raise ValueError("OpenAI API key not found.")
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -139,6 +153,7 @@ if __name__ == "__main__":
         batch_size=32,
         min_cluster_size=20,
         title="Clustering CIFAKE Real with HDBSCAN",
+        api_key=OPEN_AI_KEY,
     )
 
     elapsed_time = time.time() - start_time

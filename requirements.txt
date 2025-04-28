@@ -12,3 +12,4 @@ transformers
 timm
 sentencepiece
 openai
+python-dotenv
