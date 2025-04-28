@@ -51,8 +51,8 @@ class LabelingAgent:
         l2_distances = np.linalg.norm(embeddings - center, axis=1)
         closest_index = np.argmin(l2_distances)
         center_embedding = embeddings[closest_index]
-        print(f"Center embedding: {center_embedding}")
-        print(f"Closest index: {closest_index}")
+        #print(f"Center embedding: {center_embedding}")
+        #print(f"Closest index: {closest_index}")
         center_image_path = self.image_paths_dict[tuple(center_embedding)]
         return center_embedding, center_image_path
 
@@ -70,7 +70,7 @@ class LabelingAgent:
         
         labeled_clusters = {}
         new_keys = []
-        
+        print(len(self.clusters.keys()))
         for cluster_id, embeddings in self.clusters.items():
             # Find the closest image to the centroid of the cluster
             center_embedding, center_image_path = self.find_center(embeddings)
@@ -81,12 +81,11 @@ class LabelingAgent:
 
             # Save the image to a temporary file
             temp_image_path = f"temp_image_{cluster_id}.png"
-            image.save(temp_image_path)
-
             base64_image = base64.b64encode(open(temp_image_path, "rb").read()).decode("utf-8")
 
-            prompt = f"""Give a brief label or short phrase (with a maximum of three words) that clearly categorizes/describes 
-                        the attached image."""
+            prompt = f"""Give a brief label or short phrase (with a maximum of three words) that categorizes/describes 
+                        the attached image. Think extremely general categories. For instance, if the image is of a dog,
+                        you could say "pet" or "animal". If the image is of a car, you could say "vehicle" or "transportation"."""
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{
@@ -105,7 +104,7 @@ class LabelingAgent:
                     ]
                 }],
             )
-            label = response.choices[0].message.content.strip()
+            label = response.choices[0].message.content.strip().lower()
             labeled_clusters[label] = embeddings
             new_keys.append(label)
         

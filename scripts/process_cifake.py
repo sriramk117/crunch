@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Process CIFake dataset and run clustering.")
     parser.add_argument("--input_dir", type=str, default="datasets/cifake/test/REAL", help="Input directory containing CIFake dataset.")
-    parser.add_argument("--num_samples", type=int, default=100, help="Number of samples to process.")
+    parser.add_argument("--num_samples", type=int, default=1000, help="Number of samples to process.")
     parser.add_argument("--output_dir", type=str, default="plots", help="Output directory to save processed data.")
     parser.add_argument("--method", type=str, choices=["kmeans", "hdbscan"], default="hdbscan", help="Clustering method to use.")
     args = parser.parse_args()
