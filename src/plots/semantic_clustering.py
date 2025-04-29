@@ -6,11 +6,13 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import hdbscan 
 import altair as alt
+import base64
 alt.renderers.enable("browser") # Enable offline rendering for Altair
 plt.style.use('ggplot')
 
 from PIL import Image
 from matplotlib import cm
+from io import BytesIO
 from typing import Dict, List
 
 sys.path.append("src")
@@ -185,10 +187,17 @@ def plot_clusters_images(embeddings, labels_dict, image_paths_dict, title, save_
     for label, points in labels_dict.items():
         for point in points:
             img_path = image_paths_dict[tuple(point)]
-            data.append({"x": point[0], "y": point[1], "cluster": label, "image": img_path})
+            pil_image = Image.open(img_path)
+            output = BytesIO()
+            pil_image.save(output, format='PNG')
+            image = "data:image/png;base64," + base64.b64encode(output.getvalue()).decode()
+            data.append({"x": point[0], "y": point[1], "cluster": label, "image": image})
     df = pd.DataFrame(data)
 
-    chart = alt.Chart(df).mark_image(opacity=0.8).encode(
+    chart = alt.Chart(df).mark_image(
+        width=50,
+        height=50,
+    ).encode(
         x=alt.X('x:Q', axis=alt.Axis(title='Component 1', labelFontSize=12, titleFontSize=14)),
         y=alt.Y('y:Q', axis=alt.Axis(title='Component 2', labelFontSize=12, titleFontSize=14)),
         url='image:N',

@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Process CIFake dataset and run clustering.")
     parser.add_argument("--input_dir", type=str, default="datasets/cifake/test/FAKE", help="Input directory containing CIFake dataset.")
-    parser.add_argument("--num_samples", type=int, default=500, help="Number of samples to process.")
+    parser.add_argument("--num_samples", type=int, default=100, help="Number of samples to process.")
     parser.add_argument("--output_dir", type=str, default="plots", help="Output directory to save processed data.")
     parser.add_argument("--method", type=str, choices=["kmeans", "hdbscan"], default="hdbscan", help="Clustering method to use.")
     args = parser.parse_args()
@@ -146,16 +146,16 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
-    # cluster_hdbscan(
-    #     directory_path=input_dir,
-    #     embedding_method="CLIP",
-    #     num_samples=num_samples,
-    #     batch_size=32,
-    #     min_cluster_size=20,
-    #     reveal_images=False,
-    #     title="Clustering CIFAKE Real with HDBSCAN",
-    #     api_key=OPEN_AI_KEY,
-    # )
+    cluster_hdbscan(
+        directory_path=input_dir,
+        embedding_method="CLIP",
+        num_samples=num_samples,
+        batch_size=32,
+        min_cluster_size=10,
+        reveal_images=True,
+        title="Clustering CIFAKE Real with HDBSCAN",
+        api_key=OPEN_AI_KEY,
+    )
 
     # class_distribution_histogram(
     #     directory_path=input_dir,
@@ -167,18 +167,17 @@ if __name__ == "__main__":
     #     api_key=OPEN_AI_KEY,
     # )
 
-    cluster_synthetic_hdbscan(
-        real_dir="datasets/cifake/test/REAL",
-        synthetic_dir="datasets/cifake/test/FAKE",
-        embedding_method="CLIP",
-        num_samples=num_samples,
-        batch_size=32,
-        min_cluster_size=20,
-        reveal_images=False,
-        title="Clustering CIFAKE with HDBSCAN",
-        api_key=OPEN_AI_KEY,
-        save_path=os.path.join(output_dir, "cifake_hdbscan.png"),
-    )
+    # cluster_synthetic_hdbscan(
+    #     real_dir="datasets/cifake/test/REAL",
+    #     synthetic_dir="datasets/cifake/test/FAKE",
+    #     embedding_method="CLIP",
+    #     num_samples=num_samples,
+    #     batch_size=32,
+    #     min_cluster_size=20,
+    #     reveal_images=False,
+    #     title="Clustering CIFAKE with HDBSCAN",
+    #     api_key=OPEN_AI_KEY,
+    # )
 
     elapsed_time = time.time() - start_time
     print(f"Elapsed time: {elapsed_time:.2f} seconds")
