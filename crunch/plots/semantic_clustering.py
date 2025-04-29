@@ -15,10 +15,10 @@ from matplotlib import cm
 from io import BytesIO
 from typing import Dict, List
 
-from embedding_models.clip import CLIPEmbeddingModel
-from embedding_models.dim_reduce import apply_umap
-from clustering.k_means import KMeans
-from language_models.labeling_agent import LabelingAgent
+from crunch.embedding_models.clip import CLIPEmbeddingModel
+from crunch.embedding_models.dim_reduce import apply_umap
+from crunch.clustering.k_means import KMeans
+from crunch.language_models.labeling_agent import LabelingAgent
 import pandas as pd
 
 def compute_clip_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -> None:
