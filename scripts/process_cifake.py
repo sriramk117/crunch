@@ -14,7 +14,7 @@ from typing import List, Dict, Any
 from tqdm import tqdm
 from dotenv import load_dotenv
 
-sys.path.append("src")
+sys.path.append("crunch")
 from embedding_models.clip import CLIPEmbeddingModel
 from embedding_models.dim_reduce import apply_umap
 from clustering.k_means import KMeans
