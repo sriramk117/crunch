@@ -18,7 +18,7 @@ sys.path.append("src")
 from embedding_models.clip import CLIPEmbeddingModel
 from embedding_models.dim_reduce import apply_umap
 from clustering.k_means import KMeans
-from plots.semantic_clustering import plot_clusters, cluster_hdbscan, cluster_bar_graph
+from plots.semantic_clustering import plot_clusters_scatterplot, cluster_hdbscan, class_distribution_histogram, cluster_synthetic_hdbscan
 
 def compute_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -> None:
     """
@@ -85,7 +85,7 @@ def run_k_means_clustering(embeddings: torch.Tensor, k: int = 6, title: str = "S
     centroids, labels, clusters = kmeans.fit(embeddings)
     
     # Plot clusters
-    plot_clusters(embeddings.numpy(), clusters, title=title)
+    plot_clusters_scatterplot(embeddings.numpy(), clusters, title=title)
 
 def run_hdbscan_clustering(embeddings: torch.Tensor, min_cluster_size: int = 20, title: str = "Semantic Clustering with HDBSCAN", save_path: str = None) -> None:
     """
@@ -109,7 +109,7 @@ def run_hdbscan_clustering(embeddings: torch.Tensor, min_cluster_size: int = 20,
         clusters[label].append(embeddings[i].numpy())
 
     # Plot clusters
-    plot_clusters(embeddings.numpy(), clusters, title=title)
+    plot_clusters_scatterplot(embeddings.numpy(), clusters, title=title)
 
 if __name__ == "__main__":
     # Set random seed for reproducibility
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Process CIFake dataset and run clustering.")
     parser.add_argument("--input_dir", type=str, default="datasets/cifake/test/FAKE", help="Input directory containing CIFake dataset.")
-    parser.add_argument("--num_samples", type=int, default=1000, help="Number of samples to process.")
+    parser.add_argument("--num_samples", type=int, default=500, help="Number of samples to process.")
     parser.add_argument("--output_dir", type=str, default="plots", help="Output directory to save processed data.")
     parser.add_argument("--method", type=str, choices=["kmeans", "hdbscan"], default="hdbscan", help="Clustering method to use.")
     args = parser.parse_args()
@@ -152,19 +152,32 @@ if __name__ == "__main__":
     #     num_samples=num_samples,
     #     batch_size=32,
     #     min_cluster_size=20,
-    #     reveal_images=True,
+    #     reveal_images=False,
     #     title="Clustering CIFAKE Real with HDBSCAN",
     #     api_key=OPEN_AI_KEY,
     # )
 
-    cluster_bar_graph(
-        directory_path=input_dir,
+    # class_distribution_histogram(
+    #     directory_path=input_dir,
+    #     embedding_method="CLIP",
+    #     num_samples=num_samples,
+    #     batch_size=32,
+    #     min_cluster_size=20,
+    #     title="Class Distribution Histogram",
+    #     api_key=OPEN_AI_KEY,
+    # )
+
+    cluster_synthetic_hdbscan(
+        real_dir="datasets/cifake/test/REAL",
+        synthetic_dir="datasets/cifake/test/FAKE",
         embedding_method="CLIP",
         num_samples=num_samples,
         batch_size=32,
         min_cluster_size=20,
-        title="Clustering CIFAKE Real with HDBSCAN",
+        reveal_images=False,
+        title="Clustering CIFAKE with HDBSCAN",
         api_key=OPEN_AI_KEY,
+        save_path=os.path.join(output_dir, "cifake_hdbscan.png"),
     )
 
     elapsed_time = time.time() - start_time

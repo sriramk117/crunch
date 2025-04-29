@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 setup(
     name="crunch",
     version="0.1.0",
-    author="Sriram K.",
-    author_email="sriram@example.com",
+    author="Sriram Kutty",
+    author_email="skutty@uw.edu",
     description="A Python package for clustering and visualizing large image datasets.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",

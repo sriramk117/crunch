@@ -92,7 +92,7 @@ def plot_clusters_matplt(embeddings: np.ndarray, labels_dict: Dict, title: str =
     plt.close()
 
 
-def plot_clusters(embeddings, labels_dict, title, save_path=None):
+def plot_clusters_scatterplot(embeddings, labels_dict, title: str, num_graphs: int = 1, save_path=None):
     """
     Plot clusters in a 2D space using Altair.
 
@@ -102,27 +102,73 @@ def plot_clusters(embeddings, labels_dict, title, save_path=None):
         title (str): Title of the plot.
         save_path (str): Path to save the plot. If None, the plot will be shown instead.
     """
-    data = []
-    for label, points in labels_dict.items():
-        for point in points:
-            data.append({"x": point[0], "y": point[1], "cluster": label})
-    df = pd.DataFrame(data)
 
-    chart = alt.Chart(df).mark_circle(size=60).encode(
-        x='x:Q',
-        y='y:Q',
-        color='cluster:N',
-        tooltip=['x', 'y', 'cluster']
-    ).properties(
-        title=title,
-        width=800,
-        height=800
-    ).interactive()
+    if num_graphs == 1:
+        data = []
+        for label, points in labels_dict.items():
+            for point in points:
+                data.append({"x": point[0], "y": point[1], "cluster": label})
+        df = pd.DataFrame(data)
 
-    chart.show()
-    if save_path:
-        chart.save(save_path)
-        print(f"Plot saved to {save_path}")
+        chart = alt.Chart(df).mark_circle(size=80, opacity=0.7).encode(
+            x=alt.X('x:Q', axis=alt.Axis(title='Component 1', labelFontSize=12, titleFontSize=14)),
+            y=alt.Y('y:Q', axis=alt.Axis(title='Component 2', labelFontSize=12, titleFontSize=14)),
+            color=alt.Color('cluster:N', legend=alt.Legend(title="Cluster", labelFontSize=12, titleFontSize=14)),
+            tooltip=['x', 'y', 'cluster']
+        ).properties(
+            title=alt.TitleParams(text=title, fontSize=16, fontWeight='bold'),
+            width=900,
+            height=600
+        ).configure_axis(
+            grid=True,
+            gridOpacity=0.3
+        ).configure_legend(
+            labelFontSize=12,
+            titleFontSize=14
+        ).configure_title(
+            fontSize=18
+        ).interactive()
+
+        chart.show()
+        if save_path:
+            chart.save(save_path)
+            print(f"Plot saved to {save_path}")
+    elif num_graphs == 2:
+        data_frames = []
+        for dict in labels_dict:
+            data = []
+            for label, points in dict.items():
+                for point in points:
+                    data.append({"x": point[0], "y": point[1], "cluster": label})
+            data_frames.append(pd.DataFrame(data))
+        
+        chart_real = alt.Chart(data_frames[0]).mark_circle(size=80, opacity=0.7).encode(
+            x=alt.X('x:Q', axis=alt.Axis(title='Component 1', labelFontSize=12, titleFontSize=14)),
+            y=alt.Y('y:Q', axis=alt.Axis(title='Component 2', labelFontSize=12, titleFontSize=14)),
+            color=alt.Color('cluster:N', legend=alt.Legend(title="Cluster", labelFontSize=12, titleFontSize=14)),
+            tooltip=['x', 'y', 'cluster']
+        )
+
+        chart_synthetic = alt.Chart(data_frames[1]).mark_circle(size=80, opacity=0.7).encode(
+            x=alt.X('x:Q', axis=alt.Axis(title='Component 1', labelFontSize=12, titleFontSize=14)),
+            y=alt.Y('y:Q', axis=alt.Axis(title='Component 2', labelFontSize=12, titleFontSize=14)),
+            color=alt.Color('cluster:N', legend=alt.Legend(title="Cluster", labelFontSize=12, titleFontSize=14)),
+            tooltip=['x', 'y', 'cluster']
+        )
+
+        # Combine the two charts into a single chart
+        combined_chart = alt.hconcat(chart_real, chart_synthetic).interactive()
+
+        # Show the combined chart
+        combined_chart.show()
+
+        if save_path:
+            combined_chart.save(save_path)
+            print(f"Plot saved to {save_path}")
+    else:
+        raise ValueError("num_graphs must be either 1 or 2. Please check the input.")
+    
+
 
 def plot_clusters_images(embeddings, labels_dict, image_paths_dict, title, save_path=None):
     """
@@ -142,15 +188,20 @@ def plot_clusters_images(embeddings, labels_dict, image_paths_dict, title, save_
             data.append({"x": point[0], "y": point[1], "cluster": label, "image": img_path})
     df = pd.DataFrame(data)
 
-    chart = alt.Chart(df).mark_image().encode(
-        x='x:Q',
-        y='y:Q',
+    chart = alt.Chart(df).mark_image(opacity=0.8).encode(
+        x=alt.X('x:Q', axis=alt.Axis(title='Component 1', labelFontSize=12, titleFontSize=14)),
+        y=alt.Y('y:Q', axis=alt.Axis(title='Component 2', labelFontSize=12, titleFontSize=14)),
         url='image:N',
         tooltip=['x', 'y', 'cluster']
     ).properties(
-        title=title,
-        width=800,
-        height=800
+        title=alt.TitleParams(text=title, fontSize=16, fontWeight='bold'),
+        width=900,
+        height=600
+    ).configure_axis(
+        grid=True,
+        gridOpacity=0.3
+    ).configure_title(
+        fontSize=18
     ).interactive()
 
     chart.show()
@@ -173,15 +224,23 @@ def plot_clusters_bar_graph(embeddings, labels_dict, title, save_path=None):
         data.append({"Cluster": label, "Count": len(points)})
     df = pd.DataFrame(data)
 
-    chart = alt.Chart(df).mark_bar().encode(
-        x='Cluster:O',
-        y='Count:Q',
-        color='Cluster:N',
+    chart = alt.Chart(df).mark_bar(opacity=0.8).encode(
+        x=alt.X('Cluster:O', axis=alt.Axis(title='Cluster', labelFontSize=12, titleFontSize=14)),
+        y=alt.Y('Count:Q', axis=alt.Axis(title='Count', labelFontSize=12, titleFontSize=14)),
+        color=alt.Color('Cluster:N', legend=alt.Legend(title="Cluster", labelFontSize=12, titleFontSize=14)),
         tooltip=['Cluster', 'Count']
     ).properties(
-        title=title,
-        width=800,
-        height=400
+        title=alt.TitleParams(text=title, fontSize=16, fontWeight='bold'),
+        width=900,
+        height=500
+    ).configure_axis(
+        grid=True,
+        gridOpacity=0.3
+    ).configure_legend(
+        labelFontSize=12,
+        titleFontSize=14
+    ).configure_title(
+        fontSize=18
     )
 
     chart.show()
@@ -222,7 +281,7 @@ def cluster_and_plot(embeddings, method="kmeans", k=6, min_cluster_size=20, titl
     else:
         raise ValueError("Invalid clustering algorithm. Choose between following methods: 'kmeans' or 'hdbscan'.")
 
-    plot_clusters(embeddings.np(), clusters, title=title, save_path=save_path)
+    plot_clusters_scatterplot(embeddings.np(), clusters, title=title, save_path=save_path)
 
 def cluster_kmeans(
         directory_path, 
@@ -277,7 +336,7 @@ def cluster_kmeans(
         clusters, labels = labeling_agent.label_clusters()
         print(f"Clusters labeled by OpenAI API. Here are the labels: {labels}")
 
-    plot_clusters(embeddings.numpy(), clusters, title=title, save_path=save_path)
+    plot_clusters_scatterplot(embeddings.numpy(), clusters, title=title, save_path=save_path)
 
 def cluster_hdbscan(
         directory_path, 
@@ -340,16 +399,92 @@ def cluster_hdbscan(
     if reveal_images:
         plot_clusters_images(embeddings, clusters, image_paths_dict, title=title, save_path=save_path)
     else:
-        plot_clusters(embeddings, clusters, title=title, save_path=save_path)
+        plot_clusters_scatterplot(embeddings, clusters, title=title, save_path=save_path)
     
+def cluster_synthetic_hdbscan(
+        real_dir: str,
+        synthetic_dir: str,
+        embedding_method="CLIP", 
+        num_samples=1000,
+        batch_size=32,
+        min_cluster_size=20,
+        reveal_images=False, 
+        title="HDBSCAN Clustering", 
+        api_key=None,
+        save_path=None):
+    """
+    Perform HDBSCAN clustering to compare synthetic data with real image data
+    and plot the results.
 
-def cluster_bar_graph(
+    Args:
+        real_dir (str): Directory containing real images.
+        synthetic_dir (str): Directory containing synthetic images.
+        embedding_method (str): The embedding method used.
+        num_samples (int): Number of samples to process.
+        batch_size (int): Number of images to process in a batch.
+        min_cluster_size (int): Minimum cluster size for HDBSCAN.
+        reveal_images (bool): Whether to reveal images in the plot.
+        title (str): Title of the plot.
+        api_key (str): OpenAI API key for semantic labeling.
+        save_path (str): Path to save the plot.
+    """
+    embeddings = None
+    image_paths = None
+    if embedding_method == "CLIP":
+        real_embeddings, real_image_paths = compute_clip_emb(real_dir, num_samples=num_samples, batch_size=batch_size)
+        synthetic_embeddings, synthetic_image_paths = compute_clip_emb(synthetic_dir, num_samples=num_samples, batch_size=batch_size)
+        embeddings = torch.cat((real_embeddings, synthetic_embeddings), dim=0)
+        image_paths = real_image_paths + synthetic_image_paths
+    else:
+        raise ValueError("Invalid embedding method. Choose 'CLIP'.")
+    
+    if embeddings is None or len(embeddings) == 0:
+        raise ValueError("No embeddings were generated. Please check the input directory and embedding method.")
+    
+    # Apply dimensionality reduction 
+    real_embeddings = apply_umap(real_embeddings, n_components=2)
+    synthetic_embeddings = apply_umap(synthetic_embeddings, n_components=2)
+
+    # Create a dictionary mapping embeddings to their corresponding image paths
+    image_paths_dict_real = {}
+    for embedding, image_path in zip(real_embeddings, real_image_paths):
+        image_paths_dict_real[tuple(embedding)] = image_path
+    image_paths_dict_synthetic = {}
+    for embedding, image_path in zip(synthetic_embeddings, synthetic_image_paths):
+        image_paths_dict_synthetic[tuple(embedding)] = image_path
+    
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size)
+    real_cluster_labels = clusterer.fit_predict(real_embeddings)
+    real_clusters = {}
+    for i, label in enumerate(real_cluster_labels):
+        if label not in real_clusters:
+            real_clusters[label] = []
+        real_clusters[label].append(real_embeddings[i])
+
+    synthetic_cluster_labels = clusterer.fit_predict(synthetic_embeddings)
+    synthetic_clusters = {}
+    for i, label in enumerate(synthetic_cluster_labels):
+        if label not in synthetic_clusters:
+            synthetic_clusters[label] = []
+        synthetic_clusters[label].append(synthetic_embeddings[i])
+    
+    # Check if user wants clusters to be semantically labeled
+    if api_key:
+        labeling_agent = LabelingAgent(model="gpt-4o-mini", clusters=real_clusters, image_paths_dict=image_paths_dict_real, api_key=api_key)
+        real_clusters, real_labels = labeling_agent.label_clusters()
+        labeling_agent = LabelingAgent(model="gpt-4o-mini", clusters=synthetic_clusters, image_paths_dict=image_paths_dict_synthetic, api_key=api_key)
+        synthetic_clusters, synthetic_labels = labeling_agent.label_clusters()
+    
+    labels_dict = [real_clusters, synthetic_clusters]
+    plot_clusters_scatterplot(embeddings.numpy(), labels_dict, title=title, num_graphs=2, save_path=save_path)
+
+def class_distribution_histogram(
         directory_path, 
         embedding_method="CLIP", 
         num_samples=1000,
         batch_size=32,
         min_cluster_size=20,
-        title="HDBSCAN Clustering", 
+        title="Class Distribution Histogram", 
         api_key=None,
         save_path=None):
     """
@@ -416,7 +551,7 @@ if __name__ == "__main__":
     centroids, labels, clusters = kmeans.fit(embeddings)
     print("Cluster labels by KMeans:", clusters)
 
-    plot_clusters(embeddings.np(), clusters, title="KMeans Clustering")
+    plot_clusters_scatterplot(embeddings.np(), clusters, title="KMeans Clustering")
 
     #plot_clusters(embeddings, clusters, title="HDBSCAN Clustering")
     #plot_clusters_matplt(embeddings, clusters, title="KMeans Clustering")

@@ -80,9 +80,9 @@ class LabelingAgent:
 
             base64_image = base64.b64encode(open(center_image_path, "rb").read()).decode("utf-8")
 
-            prompt = f"""Give a brief label or short phrase (with a maximum of three words) that categorizes/describes 
-                        the attached image. Think extremely general categories. For instance, if the image is of a dog,
-                        you could say "pet" or "animal". If the image is of a car, you could say "vehicle" or "transportation"."""
+            prompt = f"""Give a brief label (with a maximum of one word) that categorizes/describes 
+                        the attached image. Think extremely general categories. For instance, if the image is of a dog
+                        or a horse, you should say "animal". If the image is of a car, you should say "vehicle" or "transportation"."""
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{
