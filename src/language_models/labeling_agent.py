@@ -70,7 +70,6 @@ class LabelingAgent:
         
         labeled_clusters = {}
         new_keys = []
-        print(len(self.clusters.keys()))
         for cluster_id, embeddings in self.clusters.items():
             # Find the closest image to the centroid of the cluster
             center_embedding, center_image_path = self.find_center(embeddings)
@@ -79,9 +78,7 @@ class LabelingAgent:
             image = Image.open(center_image_path)
             image = image.convert("RGB")
 
-            # Save the image to a temporary file
-            temp_image_path = f"temp_image_{cluster_id}.png"
-            base64_image = base64.b64encode(open(temp_image_path, "rb").read()).decode("utf-8")
+            base64_image = base64.b64encode(open(center_image_path, "rb").read()).decode("utf-8")
 
             prompt = f"""Give a brief label or short phrase (with a maximum of three words) that categorizes/describes 
                         the attached image. Think extremely general categories. For instance, if the image is of a dog,

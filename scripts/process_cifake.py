@@ -18,7 +18,7 @@ sys.path.append("src")
 from embedding_models.clip import CLIPEmbeddingModel
 from embedding_models.dim_reduce import apply_umap
 from clustering.k_means import KMeans
-from plots.semantic_clustering import plot_clusters, cluster_hdbscan, cluster_kmeans
+from plots.semantic_clustering import plot_clusters, cluster_hdbscan, cluster_bar_graph
 
 def compute_emb(input_dir: str, num_samples: int = 1000, batch_size: int = 32) -> None:
     """
@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Process CIFake dataset and run clustering.")
-    parser.add_argument("--input_dir", type=str, default="datasets/cifake/test/REAL", help="Input directory containing CIFake dataset.")
+    parser.add_argument("--input_dir", type=str, default="datasets/cifake/test/FAKE", help="Input directory containing CIFake dataset.")
     parser.add_argument("--num_samples", type=int, default=1000, help="Number of samples to process.")
     parser.add_argument("--output_dir", type=str, default="plots", help="Output directory to save processed data.")
     parser.add_argument("--method", type=str, choices=["kmeans", "hdbscan"], default="hdbscan", help="Clustering method to use.")
@@ -146,7 +146,18 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
-    cluster_hdbscan(
+    # cluster_hdbscan(
+    #     directory_path=input_dir,
+    #     embedding_method="CLIP",
+    #     num_samples=num_samples,
+    #     batch_size=32,
+    #     min_cluster_size=20,
+    #     reveal_images=True,
+    #     title="Clustering CIFAKE Real with HDBSCAN",
+    #     api_key=OPEN_AI_KEY,
+    # )
+
+    cluster_bar_graph(
         directory_path=input_dir,
         embedding_method="CLIP",
         num_samples=num_samples,
